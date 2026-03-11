@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}誰是臥底{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f14;
+      --card: #1a1a24;
+      --border: #2a2a3a;
+      --text: #e8e6e3;
+      --muted: #8b8b9a;
+      --civilian: #6bcf7f;
+      --undercover: #e07c5c;
+      --accent: #7c9ce0;
+      --round-bg: #22222e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+      margin-bottom: 1.5rem;
+    }
+    header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+    header a { color: var(--accent); text-decoration: none; }
+    header a:hover { text-decoration: underline; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 { margin: 0 0 0.75rem 0; font-size: 1.1rem; color: var(--muted); font-weight: 500; }
+    label { display: block; margin-bottom: 0.35rem; color: var(--muted); font-size: 0.9rem; }
+    input, select, button {
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--round-bg);
+      color: var(--text);
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      font-weight: 500;
+      padding: 0.6rem 1.2rem;
+    }
+    button:hover { filter: brightness(1.1); }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; }
+    .badge-civilian { background: rgba(107, 207, 127, 0.25); color: var(--civilian); }
+    .badge-undercover { background: rgba(224, 124, 92, 0.25); color: var(--undercover); }
+    .thinking-toggle {
+      font-size: 0.85rem;
+      color: var(--accent);
+      cursor: pointer;
+      user-select: none;
+      margin-top: 0.5rem;
+    }
+    .thinking-toggle:hover { text-decoration: underline; }
+    .thinking-content {
+      margin-top: 0.5rem;
+      padding: 0.75rem;
+      background: var(--round-bg);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent);
+      font-size: 0.9rem;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+    .raw-content { font-size: 0.8rem; color: var(--muted); white-space: pre-wrap; margin-top: 0.5rem; }
+    ul { margin: 0; padding-left: 1.25rem; }
+    .game-list { list-style: none; padding: 0; margin: 0; }
+    .game-list li { margin-bottom: 0.5rem; }
+    .game-list a { color: var(--accent); text-decoration: none; }
+    .game-list a:hover { text-decoration: underline; }
+    .muted { color: var(--muted); font-size: 0.9rem; }
+    .flash { margin: 0; }
+    .flash.error { color: var(--undercover); }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><a href="{{ url_for('index') }}">誰是臥底</a></h1>
+      <p class="muted">Gemini 輪流發言 · 完整思考過程記錄</p>
+    </header>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="card" style="border-color: var(--undercover);">
+          {% for category, msg in messages %}
+            <p class="flash {{ category }}">{{ msg }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

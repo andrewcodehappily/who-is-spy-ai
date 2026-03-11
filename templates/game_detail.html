@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}對戰記錄 - {{ record.group_name }}{% endblock %}
+{% block content %}
+  <div class="card">
+    <h2>本局設定</h2>
+    <p><strong>題組</strong> {{ record.config.word_group }} · <strong>實際題組</strong> {{ record.group_name }}</p>
+    <p><strong>平民詞</strong> {{ record.word_civilian }} · <strong>臥底詞</strong> {{ record.word_undercover }}</p>
+    <p><strong>人數</strong> {{ record.config.num_players }} · <strong>臥底數</strong> {{ record.config.num_undercover }} · <strong>結果</strong> {{ record.winner }}勝</p>
+    <p class="muted">對戰時間 {{ record.created_at[:19] }} · ID {{ record.id }}</p>
+    <details style="margin-top:0.75rem;">
+      <summary style="cursor:pointer; color:var(--accent);">顯示角色分配（劇透）</summary>
+      <ul style="margin-top:0.5rem;">
+        {% for role in record.roles %}
+          <li>玩家{{ role.player_id }}：<span class="badge badge-{{ 'undercover' if role.role == '臥底' else 'civilian' }}">{{ role.role }}</span> — 詞：「{{ role.word }}」</li>
+        {% endfor %}
+      </ul>
+    </details>
+  </div>
+
+  {% for round in record.rounds %}
+    <div class="card" style="border-left: 4px solid var(--accent);">
+      <h2>第 {{ round.round }} 輪</h2>
+
+      <h3 style="font-size:1rem; color:var(--muted); margin:1rem 0 0.5rem 0;">描述階段</h3>
+      {% for d in round.descriptions %}
+        <div style="margin-bottom:1rem; padding:0.75rem; background:var(--round-bg); border-radius:8px;">
+          <strong>玩家{{ d.player_id }}</strong>：{{ d.description }}
+          {% if d.thinking or d.raw %}
+            <div class="thinking-toggle" onclick="this.nextElementSibling.classList.toggle('hide'); this.textContent = this.nextElementSibling.classList.contains('hide') ? '▼ 思考過程' : '▲ 收合'">▼ 思考過程</div>
+            <div class="thinking-content hide">
+              {% if d.thinking %}{{ d.thinking }}{% endif %}
+              {% if d.raw and d.raw != d.description %}<div class="raw-content">原始回覆：{{ d.raw }}</div>{% endif %}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <h3 style="font-size:1rem; color:var(--muted); margin:1rem 0 0.5rem 0;">投票階段</h3>
+      {% for v in round.votes %}
+        <div style="margin-bottom:1rem; padding:0.75rem; background:var(--round-bg); border-radius:8px;">
+          <strong>玩家{{ v.player_id }}</strong> 投票給 玩家{{ v.vote_to }}
+          {% if v.thinking or v.raw %}
+            <div class="thinking-toggle" onclick="this.nextElementSibling.classList.toggle('hide')">▼ 思考過程</div>
+            <div class="thinking-content hide">
+              {% if v.thinking %}{{ v.thinking }}{% endif %}
+              {% if v.raw %}<div class="raw-content">原始回覆：{{ v.raw }}</div>{% endif %}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <p style="margin:1rem 0 0 0;"><strong>本輪淘汰</strong>：玩家{{ round.eliminated }} · 存活：{{ round.alive_after }}</p>
+    </div>
+  {% endfor %}
+
+  <div class="card" style="background: rgba(107, 207, 127, 0.1); border-color: var(--civilian);">
+    <h2>結果</h2>
+    <p><strong>{{ record.winner }}勝</strong></p>
+    <p><a href="{{ url_for('index') }}" style="color:var(--accent);">← 回首頁開新局或改參數</a></p>
+  </div>
+{% endblock %}
+{% block extra_css %}
+  .hide { display: none !important; }
+{% endblock %}

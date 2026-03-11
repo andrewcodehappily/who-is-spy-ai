@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}誰是臥底 - 開新局{% endblock %}
+{% block content %}
+  <div class="card">
+    <h2>開新局（可調整所有參數）</h2>
+    <form action="{{ url_for('start_game') }}" method="post">
+      <p style="margin-bottom:1rem;">
+        <label for="word_group">題組</label>
+        <select id="word_group" name="word_group">
+          {% for opt in group_options %}
+            <option value="{{ opt }}">{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </p>
+      <p style="margin-bottom:1rem;">
+        <label for="num_players">人數（預設 6 人）</label>
+        <input type="number" id="num_players" name="num_players" value="6" min="3" max="12" />
+      </p>
+      <p style="margin-bottom:1rem;">
+        <label for="num_undercover">臥底數量</label>
+        <input type="number" id="num_undercover" name="num_undercover" value="1" min="1" max="11" />
+        <span class="muted">（會自動限制不超過 人數-1）</span>
+      </p>
+      <p style="margin-bottom:1rem;">
+        <label for="model_name">模型</label>
+        <input type="text" id="model_name" name="model_name" value="qwen3:4b" placeholder="qwen3:4b" />
+        <span class="muted">Ollama：qwen3:4b、qwen3:8b 等；Gemini：gemini-1.5-flash</span>
+      </p>
+      <button type="submit">開始一局</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>題庫一覽</h2>
+    {% for group_name, pairs in word_groups.items() %}
+      <p><strong>{{ group_name }}</strong></p>
+      <ul>
+        {% for a, b in pairs %}
+          <li>{{ a }} vs {{ b }}</li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h2>最近對戰記錄</h2>
+    {% if records %}
+      <ul class="game-list">
+        {% for r in records %}
+          <li>
+            <a href="{{ url_for('game_detail', game_id=r.id) }}">{{ r.group_name }} · {{ r.word_civilian }} vs {{ r.word_undercover }} · {{ r.winner }}勝 · {{ r.created_at[:19] }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">尚無記錄，請先開一局。</p>
+    {% endif %}
+  </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+  document.getElementById('num_players').addEventListener('input', function() {
+    var n = parseInt(this.value, 10);
+    var u = document.getElementById('num_undercover');
+    if (!isNaN(n)) u.max = Math.max(1, n - 1);
+  });
+</script>
+{% endblock %}
