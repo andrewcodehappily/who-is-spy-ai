@@ -73,7 +73,15 @@ python undercover.py
 - 使用 Ollama 時，請確保後端服務已啟動 (ollama serve)。
 - 若在 Windows 終端機遇到亂碼，程式已內建 UTF-8 強制修正，建議使用 PowerShell 或 Windows Terminal 執行。
 - 程式設有 300 秒超時保護，避免模型陷入死循環。
+## 🐳 使用 Docker 啟動 (推薦專業玩家)
 
+如果你不想在本地安裝 Python 環境，可以使用 Docker 一鍵啟動網頁版：
+
+1. 確保已安裝 Docker 與 Docker Compose。
+2. 建立並設定 `.env` 檔案。
+3. 執行指令：
+   ```bash
+   docker-compose up -d
 ---
 
 <a name="english-version"></a>
