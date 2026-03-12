@@ -8,11 +8,11 @@
 
 ## 誰是臥底 AI 遊戲平台 (Who is Undercover AI)
 
-這是一個由大型語言模型 (LLM) 驅動的「誰是臥底」遊戲平台。支援 **Ollama (本地模型)** 與 **Google Gemini (雲端模型)**，具備多樣化的 AI 性格、人類玩家參與模式、特殊角色「白板」、以及自動存檔與計分系統。
+這是一個由大型語言模型 (LLM) 驅動的「誰是臥底」遊戲平台。支援 **Ollama (本地模型)**，具備多樣化的 AI 性格、人類玩家參與模式、特殊角色「白板」、以及自動存檔與計分系統。
 
 ### 🌟 核心特色
 
-- **雙模型支援**：可切換使用本地 Ollama (如 `qwen3:4b`) 或 Google Gemini。
+- **雙模型支援**：可切換使用本地 Ollama (如 `qwen3:4b`)。
 - **即時串流輸出**：支援逐字顯示 AI 的思考與發言過程，遊戲感更真實。
 - **多樣化 AI 性格**：包含「冷靜分析型」、「熱情活潑型」、「疑心病重型」等，讓對局充滿變數。
 - **人類參與模式**：你可以親自加入遊戲，與 AI 同台競技，系統會自動為你隱藏劇透資訊。
@@ -37,7 +37,6 @@ pip install -r requirements.txt
 #### 2. 設定環境變數
 建立一個 .env 檔案，並填入你的資訊：
 
-GOOGLE_API_KEY=你的_GEMINI_API_KEY
 MODEL_NAME=qwen3:4b  # 預設模型 (Ollama 名稱需包含冒號)
 NUM_PLAYERS=6
 NUM_UNDERCOVER=1
@@ -88,11 +87,11 @@ python undercover.py
 
 ## Who is the Spy AI Game Platform (Who is Undercover AI)
 
-This is an LLM-driven "Who is the Spy" (Undercover) game platform. It supports **Ollama (local models)** and **Google Gemini (cloud models)**, featuring diverse AI personalities, a human player mode, a special "Blank" (Whiteboard) role, and an automated saving and scoring system.
+This is an LLM-driven "Who is the Spy" (Undercover) game platform. It supports **Ollama (local models)** and **Google   (cloud models)**, featuring diverse AI personalities, a human player mode, a special "Blank" (Whiteboard) role, and an automated saving and scoring system.
 
 ### 🌟 Core Features
 
-- **Dual Model Support**: Switch seamlessly between local Ollama (e.g., qwen3:4b) or Google Gemini.
+- **Dual Model Support**: Switch seamlessly between local Ollama (e.g., qwen3:4b)  .
 - **Real-time Streaming Output**: See the AI's thought process and statements typed out word-by-word for a more immersive game experience.
 - **Diverse AI Personalities**: Includes personalities like "Calm & Analytical", "Enthusiastic & Lively", and "Suspicious", making every match unpredictable.
 - **Human Player Mode**: Join the game yourself and compete against the AI. The system will automatically hide spoilers for your session.
@@ -117,7 +116,6 @@ pip install -r requirements.txt
 #### 2. Configure Environment Variables
 Create a .env file and fill in your information:
 
-GOOGLE_API_KEY=YOUR_GEMINI_API_KEY
 MODEL_NAME=qwen3:4b  # Default model (Ollama names must include a colon)
 NUM_PLAYERS=6
 NUM_UNDERCOVER=1
