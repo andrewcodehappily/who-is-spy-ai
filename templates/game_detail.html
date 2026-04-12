@@ -1,64 +1,84 @@
 {% extends "base.html" %}
-{% block title %}對戰記錄 - {{ record.group_name }}{% endblock %}
+{% block title %}誰是臥底 - 開新局{% endblock %}
 {% block content %}
   <div class="card">
-    <h2>本局設定</h2>
-    <p><strong>題組</strong> {{ record.config.word_group }} · <strong>實際題組</strong> {{ record.group_name }}</p>
-    <p><strong>平民詞</strong> {{ record.word_civilian }} · <strong>臥底詞</strong> {{ record.word_undercover }}</p>
-    <p><strong>人數</strong> {{ record.config.num_players }} · <strong>臥底數</strong> {{ record.config.num_undercover }} · <strong>結果</strong> {{ record.winner }}勝</p>
-    <p class="muted">對戰時間 {{ record.created_at[:19] }} · ID {{ record.id }}</p>
-    <details style="margin-top:0.75rem;">
-      <summary style="cursor:pointer; color:var(--accent);">顯示角色分配（劇透）</summary>
-      <ul style="margin-top:0.5rem;">
-        {% for role in record.roles %}
-          <li>玩家{{ role.player_id }}：<span class="badge badge-{{ 'undercover' if role.role == '臥底' else 'civilian' }}">{{ role.role }}</span> — 詞：「{{ role.word }}」</li>
+    <h2>開新局（可調整所有參數）</h2>
+    <form action="{{ url_for('start_game') }}" method="post">
+      <p style="margin-bottom:1rem;">
+        <label for="word_group">題組</label>
+        <select id="word_group" name="word_group">
+          {% for opt in group_options %}
+            <option value="{{ opt }}">{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </p>
+      <p style="margin-bottom:1rem;">
+        <label for="num_players">人數（預設 6 人）</label>
+        <input type="number" id="num_players" name="num_players" value="6" min="3" max="12" />
+      </p>
+      <p style="margin-bottom:1rem;">
+        <label for="num_undercover">臥底數量</label>
+        <input type="number" id="num_undercover" name="num_undercover" value="1" min="1" max="11" />
+      </p>
+      <p style="margin-bottom:1rem;">
+        <label for="num_whites">白板數量</label>
+        <input type="number" id="num_whites" name="num_whites" value="1" min="0" max="11" />
+        <span class="muted">（完全不知道詞的玩家，只能靠演技）</span>
+      </p>
+      <p style="margin-bottom:1rem;">
+        <label for="backend">後端 (Backend)</label>
+        <select id="backend" name="backend">
+          <option value="ollama">Ollama (利用 M2 晶片零預算跑到爽)</option>
+          <option value="groq">Groq (雲端極速 API)</option>
+        </select>
+      </p>
+      <p style="margin-bottom:1rem;">
+        <label for="model_name">模型</label>
+        <input type="text" id="model_name" name="model_name" value="qwen2.5:1.5b" placeholder="qwen2.5:1.5b" />
+        <span class="muted">Ollama：qwen2.5:1.5b、qwen3:4b；Groq：qwen/qwen3-32b</span>
+      </p>
+      <button type="submit">開始一局</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>題庫一覽</h2>
+    {% for group_name, pairs in word_groups.items() %}
+      <p><strong>{{ group_name }}</strong></p>
+      <ul>
+        {% for a, b in pairs %}
+          <li>{{ a }} vs {{ b }}</li>
         {% endfor %}
       </ul>
-    </details>
+    {% endfor %}
   </div>
 
-  {% for round in record.rounds %}
-    <div class="card" style="border-left: 4px solid var(--accent);">
-      <h2>第 {{ round.round }} 輪</h2>
-
-      <h3 style="font-size:1rem; color:var(--muted); margin:1rem 0 0.5rem 0;">描述階段</h3>
-      {% for d in round.descriptions %}
-        <div style="margin-bottom:1rem; padding:0.75rem; background:var(--round-bg); border-radius:8px;">
-          <strong>玩家{{ d.player_id }}</strong>：{{ d.description }}
-          {% if d.thinking or d.raw %}
-            <div class="thinking-toggle" onclick="this.nextElementSibling.classList.toggle('hide'); this.textContent = this.nextElementSibling.classList.contains('hide') ? '▼ 思考過程' : '▲ 收合'">▼ 思考過程</div>
-            <div class="thinking-content hide">
-              {% if d.thinking %}{{ d.thinking }}{% endif %}
-              {% if d.raw and d.raw != d.description %}<div class="raw-content">原始回覆：{{ d.raw }}</div>{% endif %}
-            </div>
-          {% endif %}
-        </div>
-      {% endfor %}
-
-      <h3 style="font-size:1rem; color:var(--muted); margin:1rem 0 0.5rem 0;">投票階段</h3>
-      {% for v in round.votes %}
-        <div style="margin-bottom:1rem; padding:0.75rem; background:var(--round-bg); border-radius:8px;">
-          <strong>玩家{{ v.player_id }}</strong> 投票給 玩家{{ v.vote_to }}
-          {% if v.thinking or v.raw %}
-            <div class="thinking-toggle" onclick="this.nextElementSibling.classList.toggle('hide')">▼ 思考過程</div>
-            <div class="thinking-content hide">
-              {% if v.thinking %}{{ v.thinking }}{% endif %}
-              {% if v.raw %}<div class="raw-content">原始回覆：{{ v.raw }}</div>{% endif %}
-            </div>
-          {% endif %}
-        </div>
-      {% endfor %}
-
-      <p style="margin:1rem 0 0 0;"><strong>本輪淘汰</strong>：玩家{{ round.eliminated }} · 存活：{{ round.alive_after }}</p>
-    </div>
-  {% endfor %}
-
-  <div class="card" style="background: rgba(107, 207, 127, 0.1); border-color: var(--civilian);">
-    <h2>結果</h2>
-    <p><strong>{{ record.winner }}勝</strong></p>
-    <p><a href="{{ url_for('index') }}" style="color:var(--accent);">← 回首頁開新局或改參數</a></p>
+  <div class="card">
+    <h2>最近對戰記錄</h2>
+    {% if records %}
+      <ul class="game-list">
+        {% for r in records %}
+          <li>
+            <a href="{{ url_for('game_detail', game_id=r.id) }}">{{ r.group_name }} · {{ r.word_civilian }} vs {{ r.word_undercover }} · {{ r.winner }}勝 · {{ r.created_at[:19] }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">尚無記錄，快點開一局讓 AI 互相傷害！</p>
+    {% endif %}
   </div>
 {% endblock %}
-{% block extra_css %}
-  .hide { display: none !important; }
+{% block extra_js %}
+<script>
+  // 防呆機制：臥底跟白板數量不能超過總人數
+  document.getElementById('num_players').addEventListener('input', function() {
+    var n = parseInt(this.value, 10);
+    var u = document.getElementById('num_undercover');
+    var w = document.getElementById('num_whites');
+    if (!isNaN(n)) {
+      u.max = Math.max(1, n - 1);
+      w.max = Math.max(1, n - 1);
+    }
+  });
+</script>
 {% endblock %}

@@ -1,68 +1,81 @@
 {% extends "base.html" %}
-{% block title %}誰是臥底 - 開新局{% endblock %}
+{% block title %}對戰記錄 - {{ record.group_name }}{% endblock %}
 {% block content %}
   <div class="card">
-    <h2>開新局（可調整所有參數）</h2>
-    <form action="{{ url_for('start_game') }}" method="post">
-      <p style="margin-bottom:1rem;">
-        <label for="word_group">題組</label>
-        <select id="word_group" name="word_group">
-          {% for opt in group_options %}
-            <option value="{{ opt }}">{{ opt }}</option>
-          {% endfor %}
-        </select>
-      </p>
-      <p style="margin-bottom:1rem;">
-        <label for="num_players">人數（預設 6 人）</label>
-        <input type="number" id="num_players" name="num_players" value="6" min="3" max="12" />
-      </p>
-      <p style="margin-bottom:1rem;">
-        <label for="num_undercover">臥底數量</label>
-        <input type="number" id="num_undercover" name="num_undercover" value="1" min="1" max="11" />
-        <span class="muted">（會自動限制不超過 人數-1）</span>
-      </p>
-      <p style="margin-bottom:1rem;">
-        <label for="model_name">模型</label>
-        <input type="text" id="model_name" name="model_name" value="qwen3:4b" placeholder="qwen3:4b" />
-        <span class="muted">Ollama：qwen3:4b、qwen3:8b 等；Gemini：gemini-1.5-flash</span>
-      </p>
-      <button type="submit">開始一局</button>
-    </form>
-  </div>
-
-  <div class="card">
-    <h2>題庫一覽</h2>
-    {% for group_name, pairs in word_groups.items() %}
-      <p><strong>{{ group_name }}</strong></p>
-      <ul>
-        {% for a, b in pairs %}
-          <li>{{ a }} vs {{ b }}</li>
+    <h2>本局設定</h2>
+    <p><strong>題組</strong> {{ record.config.word_group }} · <strong>實際題組</strong> {{ record.group_name }}</p>
+    <p><strong>平民詞</strong> {{ record.word_civilian }} · <strong>臥底詞</strong> {{ record.word_undercover }}</p>
+    <p><strong>人數</strong> {{ record.config.num_players }} · <strong>臥底數</strong> {{ record.config.num_undercover }} · <strong>白板數</strong> {{ record.config.num_whites | default(0) }}</p>
+    <p><strong>對戰結果</strong> {{ record.winner }}勝</p>
+    <p class="muted">對戰時間 {{ record.created_at[:19] }} · ID {{ record.id }} · 後端：{{ record.config.backend | default('ollama') }}</p>
+    <details style="margin-top:0.75rem;">
+      <summary style="cursor:pointer; color:var(--accent);">顯示角色分配（劇透警告）</summary>
+      <ul style="margin-top:0.5rem;">
+        {% for role in record.roles %}
+          {% set badge_class = 'undercover' if role.role == '臥底' else ('white' if role.role == '白板' else 'civilian') %}
+          <li>玩家{{ role.player_id }}：<span class="badge badge-{{ badge_class }}">{{ role.role }}</span> — 詞：「{{ role.word }}」 — 性格：{{ role.personality }}</li>
         {% endfor %}
       </ul>
-    {% endfor %}
+    </details>
   </div>
 
-  <div class="card">
-    <h2>最近對戰記錄</h2>
-    {% if records %}
-      <ul class="game-list">
-        {% for r in records %}
-          <li>
-            <a href="{{ url_for('game_detail', game_id=r.id) }}">{{ r.group_name }} · {{ r.word_civilian }} vs {{ r.word_undercover }} · {{ r.winner }}勝 · {{ r.created_at[:19] }}</a>
-          </li>
+  {% for round in record.rounds %}
+    <div class="card" style="border-left: 4px solid var(--accent);">
+      <h2>第 {{ round.round }} 輪</h2>
+
+      <h3 style="font-size:1rem; color:var(--muted); margin:1rem 0 0.5rem 0;">描述階段</h3>
+      {% for d in round.descriptions %}
+        <div style="margin-bottom:1rem; padding:0.75rem; background:var(--round-bg); border-radius:8px;">
+          <strong>玩家{{ d.player_id }}</strong>：{{ d.description }}
+          {% if d.thinking or d.raw %}
+            <div class="thinking-toggle" onclick="this.nextElementSibling.classList.toggle('hide'); this.textContent = this.nextElementSibling.classList.contains('hide') ? '▼ 思考過程' : '▲ 收合'">▼ 思考過程</div>
+            <div class="thinking-content hide">
+              {% if d.thinking %}{{ d.thinking }}{% endif %}
+              {% if d.raw and d.raw != d.description %}<div class="raw-content">原始回覆：{{ d.raw }}</div>{% endif %}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      {% if round.discussions %}
+        <h3 style="font-size:1rem; color:var(--muted); margin:1.5rem 0 0.5rem 0;">討論階段（互相傷害）</h3>
+        {% for disc in round.discussions %}
+          <div style="margin-bottom:1rem; padding:0.75rem; background:var(--round-bg); border-radius:8px; border-left: 3px solid var(--muted);">
+            <strong>玩家{{ disc.player_id }}</strong> <span class="muted" style="font-size: 0.8rem;">(第 {{ disc.disc_round }} 輪發言)</span>：{{ disc.speech }}
+            {% if disc.thinking %}
+              <div class="thinking-toggle" onclick="this.nextElementSibling.classList.toggle('hide'); this.textContent = this.nextElementSibling.classList.contains('hide') ? '▼ 思考過程' : '▲ 收合'">▼ 思考過程</div>
+              <div class="thinking-content hide">
+                {{ disc.thinking }}
+              </div>
+            {% endif %}
+          </div>
         {% endfor %}
-      </ul>
-    {% else %}
-      <p class="muted">尚無記錄，請先開一局。</p>
-    {% endif %}
+      {% endif %}
+
+      <h3 style="font-size:1rem; color:var(--muted); margin:1.5rem 0 0.5rem 0;">投票階段</h3>
+      {% for v in round.votes %}
+        <div style="margin-bottom:1rem; padding:0.75rem; background:var(--round-bg); border-radius:8px;">
+          <strong>玩家{{ v.player_id }}</strong> 投票給 玩家{{ v.vote_to }}
+          {% if v.thinking or v.raw %}
+            <div class="thinking-toggle" onclick="this.nextElementSibling.classList.toggle('hide')">▼ 思考過程</div>
+            <div class="thinking-content hide">
+              {% if v.thinking %}{{ v.thinking }}{% endif %}
+              {% if v.raw %}<div class="raw-content">原始回覆：{{ v.raw }}</div>{% endif %}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <p style="margin:1rem 0 0 0;"><strong>本輪淘汰</strong>：玩家{{ round.eliminated }} · 存活：{{ round.alive_after }}</p>
+    </div>
+  {% endfor %}
+
+  <div class="card" style="background: rgba(107, 207, 127, 0.1); border-color: var(--civilian);">
+    <h2>結果</h2>
+    <p><strong>{{ record.winner }}勝</strong></p>
+    <p><a href="{{ url_for('index') }}" style="color:var(--accent);">← 回首頁開新局或改參數</a></p>
   </div>
 {% endblock %}
-{% block extra_js %}
-<script>
-  document.getElementById('num_players').addEventListener('input', function() {
-    var n = parseInt(this.value, 10);
-    var u = document.getElementById('num_undercover');
-    if (!isNaN(n)) u.max = Math.max(1, n - 1);
-  });
-</script>
+{% block extra_css %}
+  .hide { display: none !important; }
 {% endblock %}
